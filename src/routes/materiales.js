@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { GetProveedor, GetProveedores } from '../controllers/Proveedor.Controller.js';
+import { getMaterial, getMaterials, createMaterial } from '../controllers/Material.Controller.js';
 
 const router = Router();
 
-router.get('/', GetProveedores);
+router.get('/', getMaterials);
 
-router.get('/:id', GetProveedor);
+router.get('/:id', getMaterial);
+
+router.post('/', createMaterial);
 
 export default router;

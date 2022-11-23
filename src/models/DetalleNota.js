@@ -8,7 +8,7 @@ const DetalleNotaSchema = new Schema({
   },
   Prove: {
     type: Schema.Types.ObjectId,
-    ref: 'Provedor',
+    ref: 'Proveedor',
     required: true
   },
   Material: {

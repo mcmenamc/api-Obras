@@ -18,3 +18,27 @@ export const GetProveedor = async (req, res) => {
     res.status(404).json({ message: error.message });
   }
 };
+
+export const CreateProveedor = async (req, res) => {
+  try {
+    const { RazonSoc, Agente, Direccion, Telefono, Correo, TipoMaterial } = req.body;
+    if (!RazonSoc || !Agente || !Direccion || !Telefono || !Correo || !TipoMaterial) {
+      return res.status(400).json({ message: 'Faltan datos' });
+    }
+
+    const newProveedor = {
+      RazonSoc,
+      Agente,
+      Direccion,
+      Telefono,
+      Correo,
+      TipoMaterial
+    };
+
+    const createdProveedor = await ProveedorModel.create(newProveedor);
+
+    res.status(201).json(createdProveedor);
+  } catch (error) {
+    res.status(409).json({ message: error.message });
+  }
+};
