@@ -1,5 +1,6 @@
 import DetalleNotaModel from '../models/DetalleNota.js';
 import exceljs from 'exceljs';
+import { EstiloCelda, EstiloEncabezado } from '../utils/Excel.Style.js';
 
 export const getDetalleNotas = async (req, res) => {
   try {
@@ -71,142 +72,82 @@ export const DeleteDetalleNota = async (req, res) => {
 };
 
 export const getDetalleNotasByDate = async (req, res) => {
-  const { dateInicio, dateFin } = req.params;
+  const { dateInicio, dateFin, idObra } = req.params;
+  if (!dateInicio || !dateFin || !idObra) { return res.status(400).json({ message: 'Faltan datos' }); }
 
   const dateInicioDate = new Date(dateInicio);
   const dateFinDate = new Date(dateFin);
   try {
     const detalleNotas = await DetalleNotaModel.find().populate('Obra').populate('Prove').populate('Material').populate('Nota');
+
     const detalleNotasByDate = detalleNotas.filter((detalleNota) => {
       const detalleNotaDate = new Date(detalleNota.Nota.Fecha);
-      return detalleNotaDate >= dateInicioDate && detalleNotaDate <= dateFinDate;
+      // eslint-disable-next-line eqeqeq
+      return detalleNotaDate >= dateInicioDate && detalleNotaDate <= dateFinDate && detalleNota.Obra._id == idObra;
     });
+
     res.status(200).json(detalleNotasByDate);
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
 };
 
-export const CreateExcelAll = async (req, res) => {
+export const createDetallesNotaslExcel = async (req, res) => {
   try {
-    const detalleNotas = await DetalleNotaModel.find()
-      .populate('Obra')
-      .populate('Nota')
-      .populate('Material')
-      .populate('Prove');
-    const workbook = new exceljs.Workbook();
-    const worksheet = workbook.addWorksheet('Detalle Notas');
+    const detalleNotas = await DetalleNotaModel.find().populate('Obra').populate('Nota').populate('Material').populate('Prove');
 
-    worksheet.mergeCells('A1:V1');
-    worksheet.getCell('A1').value = 'Lista de Detalle Notas';
+    const workbook = new exceljs.Workbook();
+    const worksheet = workbook.addWorksheet('Detalles Notas');
+
+    worksheet.mergeCells('A1:H1');
+    worksheet.getCell('A1').value = 'Lista de Detalles Notas';
     worksheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
     worksheet.getRow(1).height = 100;
 
     // Encabezados
-    worksheet.getCell('A2').value = 'Nombre Obra';
-    worksheet.getCell('B2').value = 'Direccion';
-    worksheet.getCell('C2').value = 'Fecha Inicio';
-    worksheet.getCell('D2').value = 'Fecha Fin';
-    worksheet.getCell('E2').value = 'Dueño';
-    worksheet.getCell('F2').value = 'Responsable';
-    worksheet.getCell('G2').value = 'Telefono Responsable';
-    worksheet.getCell('H2').value = 'Correo Responsable';
-
-    worksheet.getCell('I2').value = 'Fecha Nota';
-    worksheet.getCell('J2').value = 'Extra';
-
-    worksheet.getCell('K2').value = 'Nombre Material';
-    worksheet.getCell('L2').value = 'Marca';
-    worksheet.getCell('M2').value = 'Categoria';
-    worksheet.getCell('N2').value = 'Unidad Medida';
-
-    worksheet.getCell('O2').value = 'Razon Social';
-    worksheet.getCell('P2').value = 'Agente';
-    worksheet.getCell('Q2').value = 'Direccion';
-    worksheet.getCell('R2').value = 'Telefono';
-    worksheet.getCell('S2').value = 'Correo';
-
-    worksheet.getCell('T2').value = 'Cantidad';
-    worksheet.getCell('U2').value = 'Precio Unitario';
-    worksheet.getCell('V2').value = 'Extra';
+    worksheet.getCell('A2').value = 'Identificador';
+    worksheet.getCell('B2').value = 'Obra';
+    worksheet.getCell('C2').value = 'Proveedor';
+    worksheet.getCell('D2').value = 'Material';
+    worksheet.getCell('E2').value = 'Nota';
+    worksheet.getCell('F2').value = 'Cantidad';
+    worksheet.getCell('G2').value = 'Precio Unitario';
+    worksheet.getCell('H2').value = 'Extra';
 
     // Datos
     let row = 3;
-    detalleNotas.forEach((detalleNota) => {
-      worksheet.getCell(`A${row}`).value = detalleNota.Obra.Nombre_Obra;
-      worksheet.getCell(`B${row}`).value = detalleNota.Obra.Direccion;
-      worksheet.getCell(`C${row}`).value = detalleNota.Obra.FechaInicio;
-      worksheet.getCell(`D${row}`).value = detalleNota.Obra.FechaFin;
-      worksheet.getCell(`E${row}`).value = detalleNota.Obra.Dueno;
-      worksheet.getCell(`F${row}`).value = detalleNota.Obra.Responsable;
-      worksheet.getCell(`G${row}`).value = detalleNota.Obra.Tel_resp;
-      worksheet.getCell(`H${row}`).value = detalleNota.Obra.Correo_resp;
-
-      worksheet.getCell(`I${row}`).value = detalleNota.Nota.Fecha;
-      worksheet.getCell(`J${row}`).value = detalleNota.Nota.Extra;
-
-      worksheet.getCell(`K${row}`).value = detalleNota.Material.Nombre_Mat;
-      worksheet.getCell(`L${row}`).value = detalleNota.Material.Marca;
-      worksheet.getCell(`M${row}`).value = detalleNota.Material.Categoria;
-      worksheet.getCell(`N${row}`).value = detalleNota.Material.UnidadMedida;
-
-      worksheet.getCell(`O${row}`).value = detalleNota.Prove.RazonSoc;
-      worksheet.getCell(`P${row}`).value = detalleNota.Prove.Agente;
-      worksheet.getCell(`Q${row}`).value = detalleNota.Prove.Direccion;
-      worksheet.getCell(`R${row}`).value = detalleNota.Prove.Telefono;
-      worksheet.getCell(`S${row}`).value = detalleNota.Prove.Correo;
-
-      worksheet.getCell(`T${row}`).value = detalleNota.Cantidad;
-      worksheet.getCell(`U${row}`).value = detalleNota.PrecioUnitario;
-      worksheet.getCell(`V${row}`).value = detalleNota.Extra;
+    detalleNotas.forEach((detallenota) => {
+      worksheet.getCell('A' + row).value = detallenota._id;
+      worksheet.getCell('B' + row).value = detallenota.Obra._id;
+      worksheet.getCell('C' + row).value = detallenota.Prove._id;
+      worksheet.getCell('D' + row).value = detallenota.Material._id;
+      worksheet.getCell('E' + row).value = detallenota.Nota._id;
+      worksheet.getCell('F' + row).value = detallenota.Cantidad;
+      worksheet.getCell('G' + row).value = detallenota.PrecioUnitario;
+      worksheet.getCell('H' + row).value = detallenota.Extra;
       row++;
     });
 
     // Estilos
-    const estiloEncabezado = {
-      font: { bold: true },
-      alignment: { vertical: 'middle', horizontal: 'center' },
-      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFBFBFBF' } }
-    };
-
-    const estiloCelda = {
-      font: {
-        name: 'Arial',
-        size: 12,
-        bold: false,
-        color: { argb: '7f7f80' }
-      },
-      alignment: {
-        vertical: 'middle',
-        horizontal: 'center'
-      },
-      border: {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-      }
-    };
-
     worksheet.getRow(2).eachCell((cell) => {
-      cell.fill = estiloEncabezado.fill;
-      cell.font = estiloEncabezado.font;
-      cell.alignment = estiloEncabezado.alignment;
-      cell.border = estiloEncabezado.border;
+      cell.fill = EstiloEncabezado.fill;
+      cell.font = EstiloEncabezado.font;
+      cell.alignment = EstiloEncabezado.alignment;
+      cell.border = EstiloEncabezado.border;
     });
 
     worksheet.eachRow((row) => {
       row.eachCell((cell) => {
-        cell.font = estiloCelda.font;
-        cell.alignment = estiloCelda.alignment;
-        cell.border = estiloCelda.border;
+        cell.font = EstiloCelda.font;
+        cell.alignment = EstiloCelda.alignment;
+        cell.border = EstiloCelda.border;
       });
     });
 
     // for  de letras
-    const letras = 'ABCDEFGHIJKLMNOPQRSTUV';
+    const letras = 'ABCDEFGH';
     for (let i = 0; i < letras.length; i++) {
-      worksheet.getColumn(letras[i]).width = 20;
+      worksheet.getColumn(letras[i]).width = 50;
     }
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

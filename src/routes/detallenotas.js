@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createDetalleNota, getDetalleNota, getDetalleNotas, DeleteDetalleNota, CreateExcelAll, getDetalleNotasByDate } from '../controllers/DetalleNota.Controller.js';
+import { createDetalleNota, getDetalleNota, getDetalleNotas, DeleteDetalleNota, getDetalleNotasByDate, createDetallesNotaslExcel } from '../controllers/DetalleNota.Controller.js';
 
 const router = Router();
 
@@ -11,8 +11,8 @@ router.post('/', createDetalleNota);
 
 router.delete('/:id', DeleteDetalleNota);
 
-router.post('/excel', CreateExcelAll);
+router.post('/excel', createDetallesNotaslExcel);
 
-router.get('/date/:dateInicio/:dateFin', getDetalleNotasByDate);
+router.get('/date/:dateInicio/:dateFin/:idObra', getDetalleNotasByDate);
 
 export default router;

@@ -25,6 +25,7 @@ app.use(morgan('dev'));
 app.use('/api', router);
 
 app.use(history());
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Static files
 app.use('/', express.static(path.join(__dirname, 'public')));
